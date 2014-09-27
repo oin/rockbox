@@ -148,7 +148,7 @@ build() {
 
     cd $builddir
 
-    echo "ROCKBOXDEV: extracting $file"
+    echo "ROCKBOXDEV: extracting $file to $dlwhere"
     tar xjf $dlwhere/$file
 
     # do we have a patch?
