@@ -42,6 +42,33 @@
 #include "appevents.h"
 #include "statusbar-skinned.h"
 
+int list_fastlog2(uint32_t v) {
+    int r;      // result goes here
+
+    static const int MultiplyDeBruijnBitPosition[32] = 
+    {
+      0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+      8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+    };
+
+    v |= v >> 1; // first round down to one less than a power of 2 
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+
+    r = MultiplyDeBruijnBitPosition[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+    return r;
+}
+
+int list_accel_transferfunction(int x) {
+    int r = list_fastlog2(((x * x) >> 3) + 1);
+    if(r < 1) {
+        r = 1;
+    }
+    return r;
+}
+
 /* The minimum number of pending button events in queue before starting
  * to limit list drawing interval.
  */
@@ -364,7 +391,7 @@ void gui_synclist_speak_item(struct gui_synclist *lists)
  */
 void gui_synclist_select_item(struct gui_synclist * gui_list, int item_number)
 {
-    if (item_number >= gui_list->nb_items || item_number < 0)
+    if (item_number >= gui_list->nb_items || item_number < 0) 
         return;
     if (item_number != gui_list->selected_item)
     {
@@ -638,8 +665,8 @@ bool gui_synclist_do_button(struct gui_synclist * lists,
     {
         if (global_settings.list_accel_start_delay)
         {
-            int start_delay = global_settings.list_accel_start_delay * HZ;
-            int accel_wait = global_settings.list_accel_wait * HZ;
+            int start_delay = 1;//global_settings.list_accel_start_delay * HZ;
+            int accel_wait = 0;//global_settings.list_accel_wait * HZ;
 
             if (get_action_statuscode(NULL)&ACTION_REPEAT)
             {
@@ -705,7 +732,7 @@ bool gui_synclist_do_button(struct gui_synclist * lists,
 #endif
         case ACTION_STD_PREV:
         case ACTION_STD_PREVREPEAT:
-            gui_list_select_at_offset(lists, -next_item_modifier);
+            gui_list_select_at_offset(lists, -list_accel_transferfunction(next_item_modifier));
 #ifndef HAVE_WHEEL_ACCELERATION
             if (button_queue_count() < FRAMEDROP_TRIGGER)
 #endif
@@ -716,7 +743,7 @@ bool gui_synclist_do_button(struct gui_synclist * lists,
 
         case ACTION_STD_NEXT:
         case ACTION_STD_NEXTREPEAT:
-            gui_list_select_at_offset(lists, next_item_modifier);
+            gui_list_select_at_offset(lists, list_accel_transferfunction(next_item_modifier));
 #ifndef HAVE_WHEEL_ACCELERATION
             if (button_queue_count() < FRAMEDROP_TRIGGER)
 #endif
