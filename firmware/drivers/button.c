@@ -160,7 +160,7 @@ void backlight_on_by_button(int btn)
     else
     {
         bl_on = true;
-        DEBUGF("BL callback is NULL -> bl ON\n");
+        // DEBUGF("BL callback is NULL -> bl ON\n");
     }
     if (bl_on)
     {
