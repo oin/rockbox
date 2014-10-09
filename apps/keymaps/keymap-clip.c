@@ -90,7 +90,7 @@ static const struct button_mapping button_context_wps[]  = {
 #endif
 
 #ifndef HAS_BUTTON_HOLD /* Clip+ */
-    { ACTION_STD_KEYLOCK,       BUTTON_HOME|BUTTON_SELECT,      BUTTON_NONE },
+    { ACTION_STD_KEYLOCK,       BUTTON_UP|BUTTON_SELECT,      BUTTON_NONE },
 #endif /* HAS_BUTTON_HOLD */
 
     LAST_ITEM_IN_LIST
@@ -256,7 +256,7 @@ static const struct button_mapping button_context_radio[]  = {
     { ACTION_SETTINGS_DECREPEAT,BUTTON_VOL_DOWN|BUTTON_REPEAT,  BUTTON_NONE },
 
 #ifndef HAS_BUTTON_HOLD /* Clip+ */
-    { ACTION_STD_KEYLOCK,       BUTTON_HOME|BUTTON_SELECT,      BUTTON_NONE },
+    { ACTION_STD_KEYLOCK,       BUTTON_UP|BUTTON_SELECT,      BUTTON_NONE },
 #endif /* HAS_BUTTON_HOLD */
 
     LAST_ITEM_IN_LIST__NEXTLIST(CONTEXT_SETTINGS)
