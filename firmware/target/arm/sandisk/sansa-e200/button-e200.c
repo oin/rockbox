@@ -171,7 +171,7 @@ void clickwheel_int(void)
         /* Poke backlight to turn it on or maintain it no more often
          * than every 1/4 second */
         next_backlight_on = current_tick + HZ/4;
-        backlight_on();
+        backlight_on_by_button(keycode);
 #ifdef HAVE_BUTTON_LIGHT
         buttonlight_on();
 #endif

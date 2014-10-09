@@ -2677,6 +2677,20 @@
   </voice>
 </phrase>
 <phrase>
+  id: LANG_BACKLIGHT_ON_VOLUME_CHANGE
+  desc: Backlight on volume change and on pause/play
+  user: core
+  <source>
+    *: "Backlight on Volume Change"
+  </source>
+  <dest>
+    *: "Backlight on Volume Change"
+  </dest>
+  <voice>
+    *: "Backlight on Volume Change"
+  </voice>
+</phrase>
+<phrase>
   id: LANG_LCD_SLEEP_AFTER_BACKLIGHT_OFF
   desc: In display settings, time to switch LCD chip into power saving state
   user: core

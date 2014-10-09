@@ -91,13 +91,6 @@ static void handle_scroll_wheel(int new_scroll)
         return;
     }
 
-   /* poke backlight every 1/4s of activity */
-    if (TIME_AFTER(current_tick, next_backlight_on)) {
-        backlight_on();
-        reset_poweroff_timer();
-        next_backlight_on = current_tick + HZ/4;
-    }
-
     if (++count < WHEEL_BASE_SENSITIVITY)
         return;
 
@@ -117,6 +110,13 @@ static void handle_scroll_wheel(int new_scroll)
     }
 
     /* have a keycode */
+
+   /* poke backlight every 1/4s of activity */
+    if (TIME_AFTER(current_tick, next_backlight_on)) {
+        backlight_on_by_button(wheel_keycode);
+        reset_poweroff_timer();
+        next_backlight_on = current_tick + HZ/4;
+    }
 
     usec = USEC_TIMER;
     v = usec - last_wheel_usec;

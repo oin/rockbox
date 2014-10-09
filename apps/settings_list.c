@@ -1051,6 +1051,9 @@ const struct settings_list settings[] = {
     OFFON_SETTING(0, bl_filter_first_keypress,
                   LANG_BACKLIGHT_FILTER_FIRST_KEYPRESS, false,
                   "backlight filters first keypress", NULL),
+    OFFON_SETTING(0, backlight_on_volume_change,
+                  LANG_BACKLIGHT_ON_VOLUME_CHANGE, true,
+                  "backlight on volume change", NULL),
 #ifdef HAVE_REMOTE_LCD
     OFFON_SETTING(0, remote_bl_filter_first_keypress,
                   LANG_BACKLIGHT_FILTER_FIRST_KEYPRESS, false,

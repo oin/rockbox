@@ -150,6 +150,41 @@ static inline int get_next_context(const struct button_mapping *items, int i)
             items[i].action_code;
 }
 
+static bool backlight_on_action(int action)
+{
+    /* no backlight on volume change and pause/play */
+    return (action != ACTION_WPS_VOLUP)
+        && (action != ACTION_WPS_VOLDOWN)
+        && (action != ACTION_WPS_PLAY)
+        && (action != ACTION_WPS_STOP)
+        && (action != ACTION_WPS_SEEKBACK)
+        && (action != ACTION_WPS_SEEKFWD)
+        && (action != ACTION_WPS_STOPSEEK)
+        && (action != ACTION_WPS_SKIPNEXT)
+        && (action != ACTION_WPS_SKIPPREV);
+}
+
+static bool backlight_on_keypress_oracle(int btn)
+{
+    /* check whether the button would fire an action */
+    /* If yes, check whether that action should turn on the backlight */
+    /* Keep this function fast! It's called from the button ticktask */
+    /* or the scrollwheel interrupt handler! */
+
+    const struct button_mapping *items = NULL;
+    int i = 0;
+
+    if (!global_settings.backlight_on_volume_change)
+    {
+        items = get_context_mapping(CONTEXT_WPS);
+        /* also check action for button release */
+        return backlight_on_action(do_button_check(items, btn, BUTTON_NONE, &i))
+            && backlight_on_action(do_button_check(items, btn | BUTTON_REL, btn, &i));
+    }
+    else
+        return true;
+}
+
 #if defined(HAVE_GUI_BOOST) && defined(HAVE_ADJUSTABLE_CPU_FREQ)
 
 /* Timeout for gui boost in seconds. */
@@ -160,7 +195,7 @@ static inline int get_next_context(const struct button_mapping *items, int i)
 static void gui_boost(bool want_to_boost)
 {
     static bool boosted = false;
-    
+
     if (want_to_boost && !boosted)
     {
         cpu_boost(true);
@@ -173,7 +208,7 @@ static void gui_boost(bool want_to_boost)
     }
 }
 
-/* gui_unboost_callback() is called GUI_BOOST_TIMEOUT seconds after the 
+/* gui_unboost_callback() is called GUI_BOOST_TIMEOUT seconds after the
  * last wheel scrolling event. */
 static int gui_unboost_callback(struct timeout *tmo)
 {
@@ -206,8 +241,18 @@ static int get_action_worker(int context, int timeout,
     int i=0;
     int ret = ACTION_UNKNOWN;
     static int last_context = CONTEXT_STD;
-    
+
     send_event(GUI_EVENT_ACTIONUPDATE, NULL);
+
+    /* In CONTEXT_WPS or CONTEXT_FM we may want to keep the backlight off */
+    /* on certain actions. */
+    /* Thus, a callback function is used to check if it should turn on. */
+    /* See also button.c */
+    if (   (context & ~ALLOW_SOFTLOCK) == CONTEXT_WPS
+        || (context & ~ALLOW_SOFTLOCK) == CONTEXT_FM )
+        set_backlight_on_keypress_oracle(backlight_on_keypress_oracle);
+    else
+        set_backlight_on_keypress_oracle(NULL);
 
     if (timeout == TIMEOUT_NOBLOCK)
         button = button_get(false);
@@ -218,9 +263,9 @@ static int get_action_worker(int context, int timeout,
 
 #if defined(HAVE_GUI_BOOST) && defined(HAVE_ADJUSTABLE_CPU_FREQ)
     static struct timeout gui_unboost;
-    /* Boost the CPU in case of wheel scrolling activity in the defined contexts. 
+    /* Boost the CPU in case of wheel scrolling activity in the defined contexts.
      * Call unboost with a timeout of GUI_BOOST_TIMEOUT. */
-    if ((button&(BUTTON_SCROLL_BACK|BUTTON_SCROLL_FWD)) && 
+    if ((button&(BUTTON_SCROLL_BACK|BUTTON_SCROLL_FWD)) &&
         (context == CONTEXT_STD      || context == CONTEXT_LIST ||
          context == CONTEXT_MAINMENU || context == CONTEXT_TREE))
     {
@@ -268,7 +313,7 @@ static int get_action_worker(int context, int timeout,
         }
         return ACTION_NONE;
     }
-        
+
     if ((context != last_context) && ((last_button & BUTTON_REL) == 0)
 #ifdef HAVE_SCROLLWHEEL
         /* Scrollwheel doesn't generate release events  */
@@ -530,4 +575,4 @@ void action_wait_for_release(void)
 {
     wait_for_release = true;
 }
-    
+

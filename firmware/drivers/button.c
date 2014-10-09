@@ -41,6 +41,7 @@
 #ifdef HAVE_REMOTE_LCD
 #include "lcd-remote.h"
 #endif
+#include "debug.h"
 
 struct event_queue button_queue SHAREDBSS_ATTR;
 
@@ -52,6 +53,7 @@ static bool flipped;  /* buttons can be flipped to match the LCD flip */
 #endif
 #ifdef HAVE_BACKLIGHT
 static bool filter_first_keypress;
+static backlight_on_keypress_oracle_func backlight_on_keypress_oracle = NULL;
 #ifdef HAVE_REMOTE_LCD
 static bool remote_filter_first_keypress;
 #endif
@@ -137,6 +139,41 @@ static bool button_try_post(int button, int data)
     /* on touchscreen we posted unconditionally */
     return ret;
 }
+
+#ifdef HAVE_BACKLIGHT
+void backlight_on_by_button(int btn)
+{
+    bool bl_on;
+    if (backlight_on_keypress_oracle != NULL)
+    {
+        bl_on = (*backlight_on_keypress_oracle)(btn);
+        DEBUGF("BL oracle (%d) returned: %d\n", btn, bl_on);
+        /* We just pressed a button - if the screen is on,
+           restart the timer to keep it on */
+        if (!bl_on && is_backlight_on(false)) {
+            DEBUGF("timer: BL is on - restarting timeout\n");
+            bl_on = true;
+        } else {
+            DEBUGF("timer: BL is off\n");
+        }
+    }
+    else
+    {
+        bl_on = true;
+        DEBUGF("BL callback is NULL -> bl ON\n");
+    }
+    if (bl_on)
+    {
+        backlight_on();
+#ifdef HAVE_REMOTE_LCD
+        remote_backlight_on();
+#endif
+#ifdef HAVE_BUTTON_LIGHT
+        buttonlight_on();
+#endif
+    }
+}
+#endif /* ifdef HAVE_BACKLIGHT */
 
 static void button_tick(void)
 {
@@ -308,10 +345,13 @@ static void button_tick(void)
                             skip_remote_release = true;
                     }
                     else
-#endif
-                        if (!filter_first_keypress || is_backlight_on(false)
+#endif /* HAVE_REMOTE_LCD */
+                        if (!filter_first_keypress
+                            || is_backlight_on(false)
+                            || ((backlight_on_keypress_oracle != NULL)
+                                && !(*backlight_on_keypress_oracle)(btn))
 #if BUTTON_REMOTE
-                                || (btn & BUTTON_REMOTE)
+                            || (btn & BUTTON_REMOTE)
 #endif
                            )
                             button_try_post(btn, data);
@@ -327,12 +367,7 @@ static void button_tick(void)
                     remote_backlight_on();
                 else
 #endif
-                {
-                    backlight_on();
-#ifdef HAVE_BUTTON_LIGHT
-                    buttonlight_on();
-#endif
-                }
+                    backlight_on_by_button(btn);
 
                 reset_poweroff_timer();
             }
@@ -447,6 +482,7 @@ void button_init(void)
 #endif
 #ifdef HAVE_BACKLIGHT
     filter_first_keypress = false;
+    set_backlight_on_keypress_oracle(NULL);
 #ifdef HAVE_REMOTE_LCD
     remote_filter_first_keypress = false;
 #endif    
@@ -560,6 +596,12 @@ void set_backlight_filter_keypress(bool value)
 {
     filter_first_keypress = value;
 }
+
+void set_backlight_on_keypress_oracle(backlight_on_keypress_oracle_func new_value)
+{
+    backlight_on_keypress_oracle = new_value;
+}
+
 #ifdef HAVE_REMOTE_LCD
 void set_remote_backlight_filter_keypress(bool value)
 {

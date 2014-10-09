@@ -662,6 +662,8 @@ struct user_settings
                                then according to timeout_values[] */
     bool caption_backlight; /* turn on backlight at end and start of track */
     bool bl_filter_first_keypress;   /* filter first keypress when dark? */
+    bool backlight_on_volume_change; /* turn on the backlight on volume change
+                                        and on pause/play? */
 #if CONFIG_CHARGING
     int backlight_timeout_plugged;
 #endif

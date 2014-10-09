@@ -169,7 +169,7 @@ static void scrollwheel(unsigned int wheel_value)
                    (wheel_delta << 24) | wheel_velocity*360/WHEELCLICKS_PER_ROTATION);
             /* message posted - reset delta and poke backlight on*/
             wheel_delta = 1;
-            backlight_on();
+            backlight_on_by_button(btn);
             buttonlight_on();
         }
         else

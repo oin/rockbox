@@ -64,6 +64,23 @@ void button_set_flip(bool flip); /* turn 180 degrees */
 #endif
 #ifdef HAVE_BACKLIGHT
 void set_backlight_filter_keypress(bool value);
+
+/* Callback function to tell whether the backlight should be turned on
+ * when a key is pressed. Called just after a key press.
+ *
+ * @param btn The button that was pressed
+ *
+ * Returns true iff the backlight should be turned on on key press.
+ */
+typedef bool (*backlight_on_keypress_oracle_func)(int btn);
+
+/* Sets the new 'oracle' to tell whether the backlight should be turned
+ * on when a key is pressed. Passing NULL as parameter will turn on the BL
+ * on every key press.
+ */
+void set_backlight_on_keypress_oracle(backlight_on_keypress_oracle_func func);
+void backlight_on_by_button(int btn);
+
 #ifdef HAVE_REMOTE_LCD
 void set_remote_backlight_filter_keypress(bool value);
 #endif
