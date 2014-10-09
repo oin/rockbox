@@ -7,9 +7,11 @@ apt-get -y update && apt-get -y install build-essential texinfo git automake lib
 
 
 # Install the custom ARM toolchain
-mkdir -p build-rbdev && cd /vagrant/tools && echo a | RBDEV_BUILD=/vagrant/build-rbdev ./rockboxdev.sh #&& rm -rf ../build-rbdev
-# Configure Rockbox to perform a standard build
+mkdir -p /home/vagrant/rbdev-dl && mkdir -p /home/vagrant/rbdev-build && cd /vagrant/tools && echo a | sudo RBDEV_BUILD=/home/vagrant/rbdev-build RBDEV_DOWNLOAD=/home/vagrant/rbdev-dl ./rockboxdev.sh && rm -rf /home/vagrant/rbdev-build && rm -rf /home/vagrant/rbdev-dl
+# Configure Rockbox to perform a standard + simulator build
 cd /vagrant && mkdir -p build-vagrant && cd build-vagrant && ../tools/configure --target=65 --type=n
+# Configure Rockbox to perform a simulator build
+cd /vagrant && mkdir -p build-simulator && cd build-simulator && ../tools/configure --target=65 --type=s
 
 # Install the ALSA sound driver
 usermod -a -G audio vagrant
@@ -20,6 +22,6 @@ if [[ ! -f /.sshd-x11-forward-done ]]; then
 	echo "X11Forwarding yes" >>/etc/ssh/sshd_config
 	echo "X11UseLocalhost no" >>/etc/ssh/sshd_config
 	touch /.sshd-x11-forward-done
-	echo "The virtual machine will now reboot to enable X11 forwarding."
-	reboot
 fi
+
+echo "Please vagrant reload before using this virtual machine."
